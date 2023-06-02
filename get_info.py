@@ -15,7 +15,7 @@ import undetected_chromedriver as uc
 
 from dotenv import load_dotenv
 
-load_dotenv()  # take environment variables from .env.
+load_dotenv()  # grab environment variables from .env
 
 MAIN_PAGE_URL = os.getenv("PAGE_URL")
 
@@ -33,8 +33,6 @@ schoolDict = {}
 
 # search for school URLs and filter them
 for count, each in enumerate(driver.find_elements(By.XPATH, "//a[contains(@href, 'university_') and not(contains(@href, 'list')) and contains(@href, '.html')]")):
-    # if len(list(schoolDict.keys())) == 4: break
-    
     href = each.get_attribute("href")
     text = each.text
     id = func.get_schoolID_from_URL(href)
@@ -42,7 +40,6 @@ for count, each in enumerate(driver.find_elements(By.XPATH, "//a[contains(@href,
     if not id.isnumeric or len(id) != 3: continue
     schoolDict[str(id)] = {"url":str(href), "name":str(text), "dep":{}}
 
-# schoolDict.pop("004")
 # prints information
 func.print_formatted_dict(schoolDict)
 
@@ -71,13 +68,11 @@ for count, school in enumerate(schoolDict):
 # prints information
 func.print_formatted_dict(depDict)
 
-
 with open("schoolDict.json", "w") as fp:
     json.dump(schoolDict, fp)
 
 with open("depDict.json", "w") as fp:
     json.dump(depDict, fp)
-
 
 driver.quit()
 

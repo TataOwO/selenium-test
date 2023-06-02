@@ -18,30 +18,15 @@ import undetected_chromedriver as uc
 
 from dotenv import load_dotenv
 
-load_dotenv()  # take environment variables from .env.
+load_dotenv()  # grab environment variables from .env
 
 # initialize the browser
 driver = uc.Chrome()
 
-depDict = None
-
-with open("depDict.json", "r") as fp:
-    depDict = json.load(fp)
-
-images = None
-
-with open("img2txt.json", "r") as fp:
-    images = json.load(fp)
-
-schoolDict = None
-
-with open("schoolDict.json", "r") as fp:
-    schoolDict = json.load(fp)
-
-depDict = None
-
-with open("depDict.json", "r") as fp:
-    depDict = json.load(fp)
+# load json files
+schoolDict = util.load_json("schoolDict.json")
+depDict = util.load_json("depDict.json")
+imageTable = util.load_json("img2txt.json")
 
 studentDict = {}
 
@@ -54,8 +39,10 @@ for dCount, dep in enumerate(depDict):
     
     for cCount, column in enumerate(driver.find_elements(By.XPATH, "//tr[@bgcolor='#FFFFFF' or @bgcolor='#DEDEDC']")):
         blockList = util.get_child_elements(column)
-        _, ranking, studentInfo, studentName, studentSchool = blockList
-        currentStudentRank = util.processStudentRank(images, ranking)
+        _, studentRank, studentInfo, studentName, studentSchool = blockList
+        currentStudentRank = util.process_student_rank(images, ranking)
+        studentID, testPlace = util.process_student_info(studentInfo)
+        
         
 
 driver.quit()

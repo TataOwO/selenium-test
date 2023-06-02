@@ -7,6 +7,10 @@ import os
 import numpy as np
 import cv2
 
+import base64 as b64
+
+from pytesseract import pytesseract
+
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.remote.webdriver import By
 import selenium.webdriver.support.expected_conditions as EC  # noqa
@@ -50,7 +54,7 @@ def image_to_text(img):
     return pytesseract.image_to_string(img)
 
 def eng2chr(text):
-    return text.replace("p", u"正").replace("n", u"負").replace("o", u"離島").replace("k", u"金門").replace("m", u"馬祖").replace("w", u"澎湖")
+    return text.replace("p", u"正取").replace("n", u"備取").replace("o", u"離島").replace("k", u"金門").replace("m", u"馬祖").replace("w", u"澎湖").replace("u", u"原住民")
 
 def get_child_elements(element):
     return element.find_elements(By.XPATH, "./*")
@@ -90,8 +94,39 @@ def img_trans2black(img):
 def empty_window(name):
     _, _2, width, height = cv2.getWindowImageRect(name)
     cv2.imshow(name, empty_rgb(width, height))
-    
-def processStudentRank(images, block):
+
+def load_json(filename):
+    output = None
+    with open(filename, "r") as fp:
+        output = json.load(fp)
+    return output
+
+def process_student_rank(images, block):
     imgs = block.find_elements(By.TAG_NAME, "img")
     if not len(imgs): return None
     return images[imgs[0]]
+
+def process_student_info(block):
+    imgs = block.find_elements(By.TAG_NAME, "img")
+    img = None
+    if len(imgs): img = get_image_from_img_src(img[0].get_attribute("src"))
+    ID = get_studentID(img)
+    
+    titles = block.find_elements(By.TAG_NAME, "a")
+    title = None
+    if len(titles): title = titles[0].text
+    title = title.strip()
+    title = [3:]
+    
+    return ID, title
+
+def check_schoolColumn_validation(school):
+    link = school.find_element(By.TAG_NAME, "a")
+    return not not link.text
+
+def process_student_school(block):
+    studentDict = {}
+    table = block.find_element(By.TAG_NAME, "tbody")
+    for school in get_child_elements(table):
+        
+        

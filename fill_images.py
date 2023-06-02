@@ -17,26 +17,21 @@ import undetected_chromedriver as uc
 # initialize the browser
 driver = uc.Chrome()
 
-depDict = None
+depDict = util.load_json("depDict.json")
 
-with open("depDict.json", "r") as fp:
-    depDict = json.load(fp)
-
-# util.print_formatted_dict(depDict)
-
-images = {}
-imgKey = []
-
-with open("img2txt.json", "r") as fp:
-    images = json.load(fp)
-
+images = util.load_json("img2txt.json")
 imgKey = list(images.keys())
 
 i = 0
 inp = ""
 
+prev = "https://www.com.tw/cross/check_004482_NO_1_111_0_3.html"
+found = False
+
 for dCount, dep in enumerate(depDict):
     d = depDict[dep]
+    if d["url"] == prev: found = True
+    if not found: continue
     driver.get(d["url"])
     WebDriverWait(driver, 60).until(
         EC.presence_of_element_located((By.ID, "mainContent"))
@@ -95,7 +90,6 @@ for dCount, dep in enumerate(depDict):
     if leaveStat: break
 
 for key in imgKey:
-    print(type(images[key]))
     if type(images[key]) == str:
         continue
     text = util.eng2chr(images[key]["text"])
