@@ -1,9 +1,18 @@
-﻿import base64 as b64
+﻿import time
+import re
+import fnmatch
 import json
-from pytesseract import pytesseract
+import os
+
 import numpy as np
 import cv2
+
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.remote.webdriver import By
+import selenium.webdriver.support.expected_conditions as EC  # noqa
+from selenium.webdriver.support.wait import WebDriverWait
+
+import undetected_chromedriver as uc
 
 pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
@@ -24,9 +33,8 @@ def get_schoolID_from_name(name):
     for each in schoolDict:
         if schoolDict[each]["name"] == name: return each
 
-def get_studentID(column):
-    b = column.get_element(By.XPATH, "//td[@width='28%']")
-    imgElem = b.get_element(By.TAG_NAME, "img")
+def get_studentID(block):
+    imgElem = block.get_element(By.TAG_NAME, "img")
     imgSRC = imgElem.get_attribute("src")
     img = get_image_from_img_src(imgSRC)
     ID = image_to_text(img)
@@ -83,3 +91,7 @@ def empty_window(name):
     _, _2, width, height = cv2.getWindowImageRect(name)
     cv2.imshow(name, empty_rgb(width, height))
     
+def processStudentRank(images, block):
+    imgs = block.find_elements(By.TAG_NAME, "img")
+    if not len(imgs): return None
+    return images[imgs[0]]
