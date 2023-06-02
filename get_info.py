@@ -32,7 +32,7 @@ WebDriverWait(driver, 20).until(
 schoolDict = {}
 
 # search for school URLs and filter them
-for count, each in enumerate(driver.find_elements(By.XPATH, "/a[contains(@href, 'university') and not(contains(@href, 'list')) and contains(@href, '.html')]]")):
+for count, each in enumerate(driver.find_elements(By.XPATH, "//a[contains(@href, 'university_') and not(contains(@href, 'list')) and contains(@href, '.html')]")):
     # if len(list(schoolDict.keys())) == 4: break
     
     href = each.get_attribute("href")
@@ -40,14 +40,11 @@ for count, each in enumerate(driver.find_elements(By.XPATH, "/a[contains(@href, 
     id = func.get_schoolID_from_URL(href)
     
     if not id.isnumeric or len(id) != 3: continue
-    schoolDict[id] = {"url":href, "name":text, "dep":{}}
+    schoolDict[str(id)] = {"url":str(href), "name":str(text), "dep":{}}
 
 # schoolDict.pop("004")
 # prints information
-# func.print_formatted_dict(schoolDict)
-
-with open("school_dict.json", "w+") as fp:
-    json.dump(fp, schoolDict, indent=4)
+func.print_formatted_dict(schoolDict)
 
 # department dictionary
 depDict = {}
@@ -67,24 +64,19 @@ for count, school in enumerate(schoolDict):
         id = func.get_depID_from_URL(href)
         
         if not id.isnumeric or len(id) != 6: continue
-        depDict[id] = {"url":href, "name":text, "school": school}
+        depDict[str(id)] = {"url":str(href), "name":str(text), "school": str(school)}
         # schoolDict[func.get_schoolID_from_name(title)]["dep"][id] = {"url":href, "name":text}
         # we will do this later
 
 # prints information
-# func.print_formatted_dict(depDict)
+func.print_formatted_dict(depDict)
 
-# stdDict = {}
 
-# for dep in depDict:
-    # d = depDict[school]
-    # driver.get(d["url"])
-    # WebDriverWait(driver, 60).until(
-        # EC.presence_of_element_located((By.ID, "mainContent"))
-    # )
-    
-    for column in driver.find_elements(By.XPATH, "//tr[@bgcolor='#FFFFFF' or @bgcolor='#DEDEDC']"):
+with open("schoolDict.json", "w") as fp:
+    json.dump(schoolDict, fp)
 
+with open("depDict.json", "w") as fp:
+    json.dump(depDict, fp)
 
 
 driver.quit()

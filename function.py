@@ -3,6 +3,7 @@ import json
 from pytesseract import pytesseract
 import numpy as np
 import cv2
+from selenium.webdriver.remote.webdriver import By
 
 pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
@@ -34,8 +35,51 @@ def get_studentID(column):
 def get_image_from_img_src(inp):
     imgBytes = b64.b64decode(inp[22:])
     imgArr = np.frombuffer(imgBytes, dtype=np.uint8)
-    img = cv2.imdecode(imgArr, flags=cv2.IMREAD_COLOR)
+    img = cv2.imdecode(imgArr, flags=cv2.IMREAD_UNCHANGED)
     return img
 
 def image_to_text(img):
     return pytesseract.image_to_string(img)
+
+def eng2chr(text):
+    return text.replace("p", u"正").replace("n", u"負").replace("o", u"離島").replace("k", u"金門").replace("m", u"馬祖").replace("w", u"澎湖")
+
+def get_child_elements(element):
+    return element.find_elements(By.XPATH, "./*")
+
+def empty_rgba(x, y):
+    arr = np.zeros((y, x, 4), dtype=np.uint8)
+    output = cv2.cvtColor(arr, cv2.COLOR_RGB2RGBA)
+    output = cv2.rectangle(output, (0, 0), (0, 0), (0,0,0,1), -1)
+    return output
+
+def empty_rgb(x, y):
+    arr = np.zeros((y, x, 3), dtype=np.uint8)
+    output = cv2.rectangle(arr, (0, 0), (0, 0), (0,0,0), -1)
+    return output
+
+def get_image_size(img):
+    height, width, _ = img.shape
+    return width, height
+
+def overlay_img(background, overlay):
+    output = cv2.addWeighted(background, 1, overlay, 1, 1)
+    return output
+
+def img_white2black(img):
+    hsv = cv2.cvtColor(img, cv2.COLOR_RGBA2HSV)
+    mask = cv2.inRange(hsv, (255,255,255), (255,255,255))
+    img[mask>0] = (0, 0, 0)
+    return img
+
+def img_trans2black(img):
+    output = img.copy()
+    trans_mask = output[:,:,3] == 0
+    output[trans_mask] = [0, 0, 0, 255]
+    ret = cv2.cvtColor(output, cv2.COLOR_BGRA2BGR)
+    return ret
+
+def empty_window(name):
+    _, _2, width, height = cv2.getWindowImageRect(name)
+    cv2.imshow(name, empty_rgb(width, height))
+    
