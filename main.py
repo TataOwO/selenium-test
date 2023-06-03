@@ -40,10 +40,13 @@ for dCount, dep in enumerate(depDict):
     for cCount, column in enumerate(driver.find_elements(By.XPATH, "//tr[@bgcolor='#FFFFFF' or @bgcolor='#DEDEDC']")):
         blockList = util.get_child_elements(column)
         _, studentRank, studentInfo, studentName, studentSchool = blockList
-        currentStudentRank = util.process_student_rank(images, ranking)
+        currentStudentRank = util.process_student_rank(images, studentRank)
         studentID, testPlace = util.process_student_info(studentInfo)
-        
-        
+        stdDict = util.process_student_school(studentSchool)
+        stdDict["ranking"] = imageTable[stdDict.pop("imgSRC")]
+
+
+
 
 driver.quit()
 

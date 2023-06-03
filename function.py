@@ -37,9 +37,7 @@ def get_schoolID_from_name(name):
     for each in schoolDict:
         if schoolDict[each]["name"] == name: return each
 
-def get_studentID(block):
-    imgElem = block.get_element(By.TAG_NAME, "img")
-    imgSRC = imgElem.get_attribute("src")
+def get_studentID_from_imgSRC(imgSRC):
     img = get_image_from_img_src(imgSRC)
     ID = image_to_text(img)
     return ID
@@ -104,29 +102,54 @@ def load_json(filename):
 def process_student_rank(images, block):
     imgs = block.find_elements(By.TAG_NAME, "img")
     if not len(imgs): return None
-    return images[imgs[0]]
+    return images[imgs[0].get_attribute("src")]
 
 def process_student_info(block):
     imgs = block.find_elements(By.TAG_NAME, "img")
     img = None
-    if len(imgs): img = get_image_from_img_src(img[0].get_attribute("src"))
-    ID = get_studentID(img)
+    if len(imgs): img = imgs[0].get_attribute("src")
+    ID = get_studentID_from_imgSRC(img)
     
     titles = block.find_elements(By.TAG_NAME, "a")
     title = None
     if len(titles): title = titles[0].text
     title = title.strip()
-    title = [3:]
+    title = title[3:]
     
     return ID, title
 
-def check_schoolColumn_validation(school):
-    link = school.find_element(By.TAG_NAME, "a")
+def check_depColumn_validation(dep):
+    link = dep.find_element(By.TAG_NAME, "a")
     return not not link.text
+
+def check_dep_on_stat(elems):
+    imgElems = elems[0].find_elements(By.TAG_NAME, "img")
+    if not len(imgElems): return False
+    return "images/putdep1.png" in imgElems[0].get_attribute("src")
+
+def get_schoolANDdep(elems):
+    res = elems[1].find_element(By.TAG_NAME, "a").text.split(" ")
+    return res[0], " ".join(res[1:])
+
+def get_rank_imgSRC(elems):
+    imgElems = elems[2].find_elements(By.TAG_NAME, "img")
+    if not len(imgElems): return False
+    return imgElems[0].get_attribute("src")
 
 def process_student_school(block):
     studentDict = {}
     table = block.find_element(By.TAG_NAME, "tbody")
-    for school in get_child_elements(table):
-        
-        
+    for dep in get_child_elements(table):
+        if not check_depColumn_validation(dep): continue
+        elems = get_child_elements(dep)
+        onStat = check_dep_on_stat(elems)
+        school, cdep = get_schoolANDdep(elems)
+        imgSRC = get_rank_imgSRC(elems)
+        studentDict[cdep] = {}
+        studentDict[cdep]["school"] = school
+        studentDict[cdep]["onStat"] = onStat
+        studentDict[cdep]["imgSRC"] = imgSRC
+    return studentDict
+
+
+
