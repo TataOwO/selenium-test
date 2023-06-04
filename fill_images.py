@@ -92,13 +92,12 @@ try:
                 inp += chr(ret)
                 print(inp)
         if leaveStat: break
-
 except:
     print("code failed")
 
 print(currentURL)
 
-images[imgKey[0]] = currentURL
+images["prev"] = currentURL
 
 for key in imgKey:
     if type(images[key]) == str:

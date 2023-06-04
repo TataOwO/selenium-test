@@ -39,7 +39,7 @@ def get_schoolID_from_name(name):
 
 def get_studentID_from_imgSRC(imgSRC):
     img = get_image_from_img_src(imgSRC)
-    ID = image_to_text(img)
+    ID = image_to_text(img).strip()
     return ID
 
 def get_image_from_img_src(inp):
@@ -56,6 +56,9 @@ def eng2chr(text):
 
 def get_child_elements(element):
     return element.find_elements(By.XPATH, "./*")
+
+def get_parent_element(element):
+    return element.find_element(By.XPATH, "./..")
 
 def empty_rgba(x, y):
     arr = np.zeros((y, x, 4), dtype=np.uint8)
@@ -101,7 +104,7 @@ def load_json(filename):
 
 def process_student_rank(images, block):
     imgs = block.find_elements(By.TAG_NAME, "img")
-    if not len(imgs): return None
+    if not len(imgs): return ""
     return images[imgs[0].get_attribute("src")]
 
 def process_student_info(block):
@@ -123,7 +126,7 @@ def check_depColumn_validation(dep):
     return not not link.text
 
 def check_dep_on_stat(elems):
-    imgElems = elems[0].find_elements(By.TAG_NAME, "img")
+    imgElems = elems[1].find_elements(By.TAG_NAME, "img")
     if not len(imgElems): return False
     return "images/putdep1.png" in imgElems[0].get_attribute("src")
 
@@ -136,7 +139,11 @@ def get_rank_imgSRC(elems):
     if not len(imgElems): return False
     return imgElems[0].get_attribute("src")
 
-def process_student_school(block):
+def get_dep_rank_text(elems):
+    imgElems = elems[2].find_elements(By.TAG_NAME, "img")
+    return get_parent_element(imgElems[0]).text
+
+def process_student_school(images, block):
     studentDict = {}
     table = block.find_element(By.TAG_NAME, "tbody")
     for dep in get_child_elements(table):
@@ -145,11 +152,13 @@ def process_student_school(block):
         onStat = check_dep_on_stat(elems)
         school, cdep = get_schoolANDdep(elems)
         imgSRC = get_rank_imgSRC(elems)
+        rankText = get_dep_rank_text(elems) if imgSRC else ""
         studentDict[cdep] = {}
         studentDict[cdep]["school"] = school
         studentDict[cdep]["onStat"] = onStat
-        studentDict[cdep]["imgSRC"] = imgSRC
+        studentDict[cdep]["ranking"] = rankText + images[imgSRC] if imgSRC else ""
     return studentDict
 
-
+# def merge_stdDict(dict1, dict2):
+    
 

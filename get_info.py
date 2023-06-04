@@ -13,11 +13,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 import undetected_chromedriver as uc
 
-from dotenv import load_dotenv
-
-load_dotenv()  # grab environment variables from .env
-
-MAIN_PAGE_URL = os.getenv("PAGE_URL")
+MAIN_PAGE_URL = os.getenv("https://www.com.tw/cross/")
 
 # initialize the browser
 driver = uc.Chrome()

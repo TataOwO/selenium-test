@@ -23,11 +23,11 @@ load_dotenv()  # grab environment variables from .env
 # initialize the browser
 driver = uc.Chrome()
 
-url = "https://www.com.tw/cross/check_011072_NO_1_111_0_3.html"
+url = "https://www.com.tw/cross/check_017012_NO_1_112_0_3.html"
 
 images = util.load_json("img2txt.json")
 
-pos = 13
+pos = 37
 
 driver.get(url)
 WebDriverWait(driver, 60).until(
@@ -40,7 +40,7 @@ blockList = util.get_child_elements(column)
 _, studentRank, studentInfo, studentName, studentSchool = blockList
 currentStudentRank = util.process_student_rank(images, studentRank)
 studentID, testPlace = util.process_student_info(studentInfo)
-res = util.process_student_school(studentSchool)
+res = util.process_student_school(images, studentSchool)
 
 print("currentStudentRank", currentStudentRank)
 print("studentID", studentID)
