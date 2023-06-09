@@ -48,7 +48,8 @@ try:
             currentStudentRank = util.process_student_rank(imageTable, studentRank)
             studentID, testPlace = util.process_student_info(studentInfo)
             stdDict = util.process_student_school(imageTable, studentSchool)
-            stdDict["testPlace"] = testPlace
+            stdDict["testPlace"] = testPlace.replace(":", "").strip()
+            if studentID in studentDict: stdDict = util.merge_dicts(studentDict[studentID], stdDict)
             studentDict[studentID] = stdDict
             
             depDict[dep]["student"][studentID] = currentStudentRank

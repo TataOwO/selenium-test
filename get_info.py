@@ -13,7 +13,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 import undetected_chromedriver as uc
 
-MAIN_PAGE_URL = os.getenv("https://www.com.tw/cross/")
+MAIN_PAGE_URL = "https://www.com.tw/cross/university_list111.html"
 
 # initialize the browser
 driver = uc.Chrome()
@@ -56,7 +56,7 @@ for count, school in enumerate(schoolDict):
         text = each.text
         id = func.get_depID_from_URL(href)
         
-        if not id.isnumeric or len(id) != 6: continue
+        if not id.isnumeric or len(id) != 6 or id in depDict: continue
         depDict[str(id)] = {"url":str(href), "name":str(text), "school": str(school)}
         # schoolDict[func.get_schoolID_from_name(title)]["dep"][id] = {"url":href, "name":text}
         # we will do this later
@@ -71,8 +71,6 @@ with open("depDict.json", "w") as fp:
     json.dump(depDict, fp)
 
 driver.quit()
-
-
 
 
 

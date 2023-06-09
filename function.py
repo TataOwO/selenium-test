@@ -33,9 +33,15 @@ def print_formatted_dict(d):
     print(json.dumps(d, indent=4))
     print(len(list(d.keys())))
 
-def get_schoolID_from_name(name):
-    for each in schoolDict:
-        if schoolDict[each]["name"] == name: return each
+def get_schoolID_from_name(schoolDict, name):
+    for schoolID in schoolDict:
+        if schoolDict[schoolID]["name"] == name: return schoolID
+    return ""
+
+def get_depID_from_name(depDict, schoolID, name):
+    for depID in depDict:
+        if depDict[depID]["name"] == name and depDict[depID]["school"] == schoolID: return depID
+    return ""
 
 def get_studentID_from_imgSRC(imgSRC):
     img = get_image_from_img_src(imgSRC)
@@ -126,13 +132,20 @@ def check_depColumn_validation(dep):
     return not not link.text
 
 def check_dep_on_stat(elems):
-    imgElems = elems[1].find_elements(By.TAG_NAME, "img")
+    imgElems = elems[0].find_elements(By.TAG_NAME, "img")
     if not len(imgElems): return False
     return "images/putdep1.png" in imgElems[0].get_attribute("src")
 
 def get_schoolANDdep(elems):
-    res = elems[1].find_element(By.TAG_NAME, "a").text.split(" ")
-    return res[0], " ".join(res[1:])
+    text = elems[1].find_element(By.TAG_NAME, "a").text
+    res = text.split(" ")
+    if len(res) > 1:
+        return res[0], " ".join(res[1:])
+    pos = text.find(u"大學")
+    if pos == -1:
+        return "", text
+    pos += 2
+    return text[:pos], text[pos:]
 
 def get_rank_imgSRC(elems):
     imgElems = elems[2].find_elements(By.TAG_NAME, "img")
@@ -159,6 +172,27 @@ def process_student_school(images, block):
         studentDict[cdep]["ranking"] = rankText + images[imgSRC] if imgSRC else ""
     return studentDict
 
-# def merge_stdDict(dict1, dict2):
-    
+def merge_dicts(dict1, dict2):
+    res = {}
+    for each in dict1:
+        if not each in dict2:
+            res[each] = dict1[each]
+            continue
+        if type(dict1[each]) == dict and type(dict2[each]) == dict:
+            res[each] = merge_dicts(dict1[each], dict2[each])
+            continue
+        res[each] = dict1[each]
+    for each in dict2:
+        if each in res:
+            continue
+        if not each in dict1:
+            res[each] = dict2[each]
+            continue
+        if type(dict1[each]) == dict and type(dict2[each]) == dict:
+            res[each] = merge_dicts(dict1[each], dict2[each])
+            continue
+        res[each] = dict2[each]
+    return res
+
+
 

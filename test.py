@@ -16,33 +16,57 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 import undetected_chromedriver as uc
 
-from dotenv import load_dotenv
-
-load_dotenv()  # grab environment variables from .env
-
 # initialize the browser
 driver = uc.Chrome()
 
-url = "https://www.com.tw/cross/check_017012_NO_1_112_0_3.html"
+# load json files
+schoolDict = util.load_json("schoolDict.json")
+depDict = util.load_json("depDict.json")
+imageTable = util.load_json("img2txt.json")
+studentDict = util.load_json("studentDict.json")
 
-images = util.load_json("img2txt.json")
+prev = studentDict["prev"]
+found = False
+currentURL = ""
 
-pos = 37
+try:
+    for dCount, dep in enumerate(depDict):
+        d = depDict[dep]
+        if d["url"] == prev: found = True
+        if not found: continue
+        driver.get(d["url"])
+        currentURL = d["url"]
+        WebDriverWait(driver, 60).until(
+            EC.presence_of_element_located((By.ID, "mainContent"))
+        )
+        
+        depDict[dep]["student"] = {}
+        
+        for cCount, column in enumerate(driver.find_elements(By.XPATH, "//tr[@bgcolor='#FFFFFF' or @bgcolor='#DEDEDC']")):
+            blockList = util.get_child_elements(column)
+            _, studentRank, studentInfo, studentName, studentSchool = blockList
+            currentStudentRank = util.process_student_rank(imageTable, studentRank)
+            studentID, testPlace = util.process_student_info(studentInfo)
+            stdDict = util.process_student_school(imageTable, studentSchool)
+            stdDict["testPlace"] = testPlace.replace(":", "").strip()
+            if studentID in studentDict: stdDict = util.merge_dicts(studentDict[studentID], stdDict)
+            studentDict[studentID] = stdDict
+            
+            depDict[dep]["student"][studentID] = currentStudentRank
+except:
+    print("code failed")
 
-driver.get(url)
-WebDriverWait(driver, 60).until(
-    EC.presence_of_element_located((By.ID, "mainContent"))
-)
+studentDict["prev"] = currentURL
 
-column = driver.find_elements(By.XPATH, "//tr[@bgcolor='#FFFFFF' or @bgcolor='#DEDEDC']")[pos]
+with open("depDict.json", "w") as fp:
+    json.dump(depDict, fp)
 
-blockList = util.get_child_elements(column)
-_, studentRank, studentInfo, studentName, studentSchool = blockList
-currentStudentRank = util.process_student_rank(images, studentRank)
-studentID, testPlace = util.process_student_info(studentInfo)
-res = util.process_student_school(images, studentSchool)
+with open("studentDict.json", "w") as fp:
+    json.dump(studentDict, fp)
 
-print("currentStudentRank", currentStudentRank)
-print("studentID", studentID)
-print("testPlace", testPlace)
-util.print_formatted_dict(res)
+driver.quit()
+
+
+
+
+
