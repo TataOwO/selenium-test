@@ -24,10 +24,19 @@ def list_remove_duplicate(l):
     return list(dict.fromkeys(l))
 
 def get_schoolID_from_URL(url):
-    return url[36:39]
+    output = url[:url.rfind("_")]
+    return output[output.rfind("_")+1:]
 
 def get_depID_from_URL(url):
-    return url[31:37]
+    output = url[url.find("_")+1:]
+    return output[:output.find("_")]
+
+def get_schoolType_from_URL(url):
+    output = url[:url.rfind("/")]
+    return output[output.rfind("/")+1:]
+
+def string_to_numString(text):
+    return re.search(r'\d+', text).group()
 
 def print_formatted_dict(d):
     print(json.dumps(d, indent=4))
@@ -53,6 +62,14 @@ def get_image_from_img_src(inp):
     imgArr = np.frombuffer(imgBytes, dtype=np.uint8)
     img = cv2.imdecode(imgArr, flags=cv2.IMREAD_UNCHANGED)
     return img
+
+def src2text(imageTable, src):
+    if src is None:
+        return None
+    if src in imageTable:
+        return imageTable[src]
+    imageTable["unprocessed"].append(src)
+    return False
 
 def image_to_text(img):
     return pytesseract.image_to_string(img)
@@ -110,8 +127,9 @@ def load_json(filename):
 
 def process_student_rank(images, block):
     imgs = block.find_elements(By.TAG_NAME, "img")
-    if not len(imgs): return ""
-    return images[imgs[0].get_attribute("src")]
+    if not len(imgs): return None
+    src = imgs[0].get_attribute("src")
+    return src2text(images, src)
 
 def process_student_info(block):
     imgs = block.find_elements(By.TAG_NAME, "img")
@@ -136,41 +154,43 @@ def check_dep_on_stat(elems):
     if not len(imgElems): return False
     return "images/putdep1.png" in imgElems[0].get_attribute("src")
 
-def get_schoolANDdep(elems):
-    text = elems[1].find_element(By.TAG_NAME, "a").text
-    res = text.split(" ")
-    if len(res) > 1:
-        return res[0], " ".join(res[1:])
-    pos = text.find(u"大學")
-    if pos == -1:
-        return "", text
-    pos += 2
-    return text[:pos], text[pos:]
+def get_depsID_from_block(elems):
+    href = elems[1].find_element(By.TAG_NAME, "a").get_attribute("href")
+    return get_depID_from_URL(href)
 
 def get_rank_imgSRC(elems):
     imgElems = elems[2].find_elements(By.TAG_NAME, "img")
-    if not len(imgElems): return False
+    if not len(imgElems): return None
     return imgElems[0].get_attribute("src")
 
 def get_dep_rank_text(elems):
     imgElems = elems[2].find_elements(By.TAG_NAME, "img")
+    if not len(imgElems): return ""
     return get_parent_element(imgElems[0]).text
 
 def process_student_school(images, block):
     studentDict = {}
+    ret = False
     table = block.find_element(By.TAG_NAME, "tbody")
     for dep in get_child_elements(table):
         if not check_depColumn_validation(dep): continue
         elems = get_child_elements(dep)
         onStat = check_dep_on_stat(elems)
-        school, cdep = get_schoolANDdep(elems)
+        depID = get_depsID_from_block(elems)
         imgSRC = get_rank_imgSRC(elems)
-        rankText = get_dep_rank_text(elems) if imgSRC else ""
-        studentDict[cdep] = {}
-        studentDict[cdep]["school"] = school
-        studentDict[cdep]["onStat"] = onStat
-        studentDict[cdep]["ranking"] = rankText + images[imgSRC] if imgSRC else ""
-    return studentDict
+        rankText = get_dep_rank_text(elems)
+        ranking = src2text(images, imgSRC)
+        if ranking is None:
+            pass
+        elif not ranking:
+            ret = True
+            print()
+            print(imgSRC)
+            break
+        studentDict[depID] = {}
+        studentDict[depID]["onStat"] = onStat
+        studentDict[depID]["ranking"] = rankText + images[imgSRC] if imgSRC else ""
+    return studentDict, ret
 
 def merge_dicts(dict1, dict2):
     res = {}
@@ -194,5 +214,28 @@ def merge_dicts(dict1, dict2):
         res[each] = dict2[each]
     return res
 
-
+def fill_text4img(img):
+    inp = ""
+    while True:
+        cv2.imshow("img", img)
+        ret = cv2.waitKey(33)
+        if ret == 8:  # backspace
+            inp = inp[:-1]
+            print(inp)
+            continue
+        if ret == 91: # [ -> go left
+            print()
+            cv2.destroyAllWindows()
+            return -1, inp
+        if ret == 93: # ] -> go right
+            print()
+            cv2.destroyAllWindows()
+            return 1, inp
+        if ret == 13: # enter
+            leaveStat = True
+            prev = d["url"]
+            return 0, None
+        if ret in range(1, 256):
+            inp += chr(ret)
+            print(inp)
 

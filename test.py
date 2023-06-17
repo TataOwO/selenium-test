@@ -4,9 +4,6 @@ import fnmatch
 import json
 import os
 
-import numpy as np
-import cv2
-
 import function as util
 
 from selenium.common.exceptions import WebDriverException
@@ -16,57 +13,28 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 import undetected_chromedriver as uc
 
+imageTable = util.load_json("img2txt.json")
+
 # initialize the browser
 driver = uc.Chrome()
 
-# load json files
-schoolDict = util.load_json("schoolDict.json")
-depDict = util.load_json("depDict.json")
-imageTable = util.load_json("img2txt.json")
-studentDict = util.load_json("studentDict.json")
+url = "https://www.com.tw/cross/check_001042_NO_0_111_0_3.html"
 
-prev = studentDict["prev"]
-found = False
-currentURL = ""
+driver.get(url)
+WebDriverWait(driver, 60).until(
+    EC.presence_of_element_located((By.ID, "mainContent"))
+)
 
-try:
-    for dCount, dep in enumerate(depDict):
-        d = depDict[dep]
-        if d["url"] == prev: found = True
-        if not found: continue
-        driver.get(d["url"])
-        currentURL = d["url"]
-        WebDriverWait(driver, 60).until(
-            EC.presence_of_element_located((By.ID, "mainContent"))
-        )
-        
-        depDict[dep]["student"] = {}
-        
-        for cCount, column in enumerate(driver.find_elements(By.XPATH, "//tr[@bgcolor='#FFFFFF' or @bgcolor='#DEDEDC']")):
-            blockList = util.get_child_elements(column)
-            _, studentRank, studentInfo, studentName, studentSchool = blockList
-            currentStudentRank = util.process_student_rank(imageTable, studentRank)
-            studentID, testPlace = util.process_student_info(studentInfo)
-            stdDict = util.process_student_school(imageTable, studentSchool)
-            stdDict["testPlace"] = testPlace.replace(":", "").strip()
-            if studentID in studentDict: stdDict = util.merge_dicts(studentDict[studentID], stdDict)
-            studentDict[studentID] = stdDict
-            
-            depDict[dep]["student"][studentID] = currentStudentRank
-except:
-    print("code failed")
+column = driver.find_elements(By.XPATH, "//tr[@bgcolor='#FFFFFF' or @bgcolor='#DEDEDC']")[0]
 
-studentDict["prev"] = currentURL
+blockList = util.get_child_elements(column)
+_, studentRank, studentInfo, studentName, studentSchool = blockList
 
-with open("depDict.json", "w") as fp:
-    json.dump(depDict, fp)
+deps = studentSchool.find_elements(By.TAG_NAME, "tbody")[0]
 
-with open("studentDict.json", "w") as fp:
-    json.dump(studentDict, fp)
+depElems = util.get_child_elements(util.get_child_elements(deps)[1])
 
-driver.quit()
+test = depElems[2].get_attribute("test")
 
-
-
-
+print(test)
 

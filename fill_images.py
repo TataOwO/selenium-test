@@ -19,19 +19,21 @@ driver = uc.Chrome()
 
 depDict = util.load_json("depDict.json")
 
-images = util.load_json("img2txt.json")
-imgKey = list(images.keys())
+imageTable = util.load_json("img2txt.json")
+imgKey = list(imageTable["unprocessed"])
 
 i = 0
 inp = ""
 
-prev = images[imgKey[0]]
-found = False
+prev = imageTable[imgKey[0]]
+found = not prev
 currentURL = ""
+leaveStat = False
 
 try:
-    for dCount, dep in enumerate(depDict):
+    for dCount, src in enumerate(imageTable["unprocessed"]):
         d = depDict[dep]
+        if d["type"] == "cross": continue
         if d["url"] == prev: found = True
         if not found: continue
         driver.get(d["url"])
@@ -47,69 +49,49 @@ try:
                 if not src.startswith("data:image/png;base64,") or src in imgKey: continue
                 img = util.get_image_from_img_src(src)
                 img = util.img_trans2black(img)
-                images[src] = {"img":img, "text":""}
+                imageTable[src] = {"img":img, "text":""}
                 imgKey.append(src)
             for imgElem in blockList[4].find_elements(By.TAG_NAME, "img"):
                 src = imgElem.get_attribute("src")
                 if not src.startswith("data:image/png;base64,") or src in imgKey: continue
                 img = util.get_image_from_img_src(src)
                 img = util.img_trans2black(img)
-                images[src] = {"img":img, "text":""}
+                imageTable[src] = {"img":img, "text":""}
                 imgKey.append(src)
         
-        leaveStat = False
         while i < len(imgKey):
             if i < 0: i = 0
             key = imgKey[i]
-            if type(images[key]) == str:
+            if type(imageTable[key]) == str:
                 i += 1
                 continue
-            cv2.imshow("img", images[key]["img"])
-            ret = cv2.waitKey(33)
-            if ret == 91: # [ -> go left
-                i -= 1
-                images[key]["text"] = inp
-                inp = ""
-                print()
-                cv2.destroyAllWindows()
-                continue
-            if ret == 93: # ] -> go right
-                i += 1
-                images[key]["text"] = inp
-                inp = ""
-                print()
-                cv2.destroyAllWindows()
-                continue
-            if ret == 8:  # backspace
-                inp = inp[:-1]
-                print(inp)
-                continue
-            if ret == 13: # enter
+            img = imageTable[key]["img"]
+            ret = util.fill_text4img(img)
+            if ret[1] == None:
                 leaveStat = True
-                prev = d["url"]
                 break
-            if ret in range(1, 256):
-                inp += chr(ret)
-                print(inp)
+            i += ret[0]
+            imageTable[key]["text"] = ret[1]
         if leaveStat: break
 except:
+    leaveStat = True
     print("code failed")
 
 print(currentURL)
 
-images["prev"] = currentURL
+imageTable["prev"] = currentURL if leaveStat else ""
 
 for key in imgKey:
-    if type(images[key]) == str:
+    if type(imageTable[key]) == str:
         continue
-    text = util.eng2chr(images[key]["text"])
+    text = util.eng2chr(imageTable[key]["text"])
     if text == "":
-        images.pop(key)
+        imageTable.pop(key)
     else:
-        images[key] = text
+        imageTable[key] = text
 
 with open("img2txt.json", "w") as fp:
-    json.dump(images, fp)
+    json.dump(imageTable, fp)
 
 driver.quit()
 
