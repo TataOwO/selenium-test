@@ -36,7 +36,10 @@ def get_schoolType_from_URL(url):
     return output[output.rfind("/")+1:]
 
 def string_to_numString(text):
-    return re.search(r'\d+', text).group()
+    try:
+        return re.search(r'\d+', text).group()
+    except:
+        return text
 
 def print_formatted_dict(d):
     print(json.dumps(d, indent=4))
@@ -68,14 +71,13 @@ def src2text(imageTable, src):
         return None
     if src in imageTable:
         return imageTable[src]
-    imageTable["unprocessed"].append(src)
     return False
 
 def image_to_text(img):
     return pytesseract.image_to_string(img)
 
 def eng2chr(text):
-    return text.replace("p", u"正取").replace("n", u"備取").replace("o", u"離島").replace("k", u"金門").replace("m", u"馬祖").replace("w", u"澎湖").replace("u", u"原住民")
+    return text.replace("p", u"正取").replace("n", u"備取").replace("o", u"離島").replace("k", u"金門").replace("m", u"馬祖").replace("w", u"澎湖").replace("u", u"原住民").replace("j", u"借取")
 
 def get_child_elements(element):
     return element.find_elements(By.XPATH, "./*")
@@ -239,3 +241,11 @@ def fill_text4img(img):
             inp += chr(ret)
             print(inp)
 
+def type2txt(typeName):
+    if typeName == "cross":
+        return u"普大 個人申請"
+    if typeName == "tech":
+        return u"科大 四技申請"
+    if typeName == "vtech":
+        return u"統測甄選"
+    return ""

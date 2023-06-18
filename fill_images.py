@@ -4,6 +4,7 @@ import fnmatch
 import json
 import numpy as np
 import cv2
+import sys
 
 import function as util
 
@@ -17,10 +18,16 @@ import undetected_chromedriver as uc
 # initialize the browser
 driver = uc.Chrome()
 
+desiredType = sys.argv[1]
+
 depDict = util.load_json("depDict.json")
 
+studentDict = util.load_json(f"{desiredType}.json")
+
 imageTable = util.load_json("img2txt.json")
-imgKey = list(imageTable["unprocessed"])
+imgKey = list(imageTable.keys())
+
+print(studentDict["unprocessed"])
 
 i = 0
 inp = ""
@@ -31,9 +38,9 @@ currentURL = ""
 leaveStat = False
 
 try:
-    for dCount, src in enumerate(imageTable["unprocessed"]):
+# if True:
+    for dCount, dep in enumerate(studentDict["unprocessed"]):
         d = depDict[dep]
-        if d["type"] == "cross": continue
         if d["url"] == prev: found = True
         if not found: continue
         driver.get(d["url"])

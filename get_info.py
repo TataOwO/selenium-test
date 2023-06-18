@@ -14,9 +14,9 @@ from selenium.webdriver.support.wait import WebDriverWait
 import undetected_chromedriver as uc
 
 MAIN_PAGE_URL = [
-    "https://www.com.tw/cross/university_list111.html",
-    "https://www.com.tw/vtech/university_list111.html",
-    "https://www.com.tw/cross/tech_university_list111.html"
+    "https://www.com.tw/cross/university_list110.html",
+    "https://www.com.tw/vtech/university_list110.html",
+    "https://www.com.tw/cross/tech_university_list110.html"
 ]
 
 # initialize the browser

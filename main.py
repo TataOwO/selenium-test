@@ -35,7 +35,8 @@ leaveStat = False
 
 try:
 # if True:
-    for dCount, depID in enumerate(depDict):
+    # for dCount, depID in enumerate(depDict):
+    for dCount, depID in enumerate(studentDict["unprocessed"]):
         d = depDict[depID]
         if d["url"] == prev: found = True
         if not found: continue
@@ -72,9 +73,6 @@ studentDict["prev"] = currentURL if leaveStat else ""
 
 with open(f"{desiredType}.json", "w+") as fp:
     json.dump(studentDict, fp)
-
-with open(f"{desiredType}-img2txt.json", "w+") as fp:
-    json.dump(imageTable, fp)
 
 driver.quit()
 
