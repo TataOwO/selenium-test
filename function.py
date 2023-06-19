@@ -249,3 +249,8 @@ def type2txt(typeName):
     if typeName == "vtech":
         return u"統測甄選"
     return ""
+
+def determine_depDict(crossDict, vtechDict, depID):
+    if depID in crossDict: return crossDict
+    if depID in vtechDict: return vtechDict
+    return None

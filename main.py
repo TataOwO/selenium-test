@@ -35,8 +35,8 @@ leaveStat = False
 
 try:
 # if True:
-    # for dCount, depID in enumerate(depDict):
-    for dCount, depID in enumerate(studentDict["unprocessed"]):
+    for dCount, depID in enumerate(depDict):
+    # for dCount, depID in enumerate(studentDict["unprocessed"]):
         d = depDict[depID]
         if d["url"] == prev: found = True
         if not found: continue
